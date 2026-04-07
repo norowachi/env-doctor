@@ -1,2 +1,153 @@
-# env-doctor
-Validate .env files against a known scheme; catch missing keys, wrong types, and placeholder values before they cause bugs.
+# 🩺 env-doctor
+
+> Validate your `.env` files against `.env.example`
+> 
+> Catch missing keys, wrong types, and placeholder values before they cause bugs.
+
+Everyone has a `.env.example`, nobody enforces it.  
+`env-doctor` is a zero-dependency CLI that makes your `.env` a happy first-class citizen
+
+---
+
+## Features
+
+- [x] Detect missing keys
+- [x] Detect empty values
+- [x] Flagging placeholder values (`changeme`, `xxx`, `secret`, etc.)
+- [x] Type validation via comment annotations (`url`, `number`, `boolean`, `email`)
+- [x] Required field enforcement
+- [x] Non-zero exit code on errors (CI-friendly)
+- [x] JSON output for CI pipelines
+- [x] Zero external dependencies
+
+---
+
+## Installation
+
+```bash
+# Build from source
+git clone https://github.com/norowachi/env-doctor
+cd env-doctor
+go build -o env-doctor ./cmd/env-doctor
+
+# Move to PATH
+mv env-doctor /usr/local/bin/
+```
+
+---
+
+## Usage
+
+```bash
+# Basic check, compares files in current dir
+env-doctor
+
+# Custom paths
+env-doctor --example .env.schema --env .env.production
+
+# JSON output for Scripts / CI
+env-doctor --json
+```
+
+---
+
+## Schema Annotations
+
+Add annotations as comments directly above a key in `.env.example`:
+
+```bash
+# @required
+# @type: url
+# @desc: PostgreSQL connection string
+DATABASE_URL=
+
+# @required
+# @type: number
+PORT=3000
+
+# @type: boolean
+DEBUG=false
+
+# @type: email
+ADMIN_EMAIL=
+```
+
+### Supported types
+
+| Type | Validates |
+|------|-----------|
+| `url` | Well-formated URL with scheme and host |
+| `number` / `int` | Integer value |
+| `boolean` / `bool` | `true`, `false`, `1`, `0` |
+| `email` | Valid email address format |
+
+---
+
+## CI Integration
+
+### GitHub Actions
+
+```yaml
+- name: Validate environment
+  run: |
+    env-doctor --env .env.ci --json
+```
+
+### Pre-commit hook
+
+Create `.git/hooks/pre-commit`:
+
+```bash
+#!/bin/sh
+env-doctor || exit 1
+```
+
+```bash
+chmod +x .git/hooks/pre-commit
+```
+
+---
+
+## Example output
+
+```
+🩺 env-doctor  →  .env.example vs .env
+
+───────────────────────────────────────────────────────
+ERROR    DATABASE_URL                        expected a valid URL, got: "not-a-valid-url"
+WARN     APP_SECRET                          value looks like a placeholder: "changeme"
+ERROR    PORT                                expected a number, got: "abc"
+ERROR    DEBUG                               expected a boolean (true/false/1/0), got: "maybe"
+ERROR    ADMIN_EMAIL                         expected a valid email address, got: "not-an-email"
+WARN     STRIPE_KEY                          value is empty
+INFO     EXTRA_KEY                           key exists in .env but not in .env.example
+───────────────────────────────────────────────────────
+  4 error(s)  2 warning(s)  1 info
+```
+
+---
+
+## Roadmap
+
+- [ ] `.env-doctor.yml` config file for project-level settings
+- [ ] Custom regex type (`@type: /^[A-Z]{3}$/`)
+- [ ] Homebrew tap & apt package
+- [ ] VS Code extension (inline squiggles in `.env` files)
+- [ ] Multi-env checks support (`.env.staging`, `.env.production`)
+
+---
+
+## Contributing
+
+PRs are welcome!
+Please open an issue first for large changes.
+
+```bash
+git clone https://github.com/norowachi/env-doctor
+cd env-doctor
+go build ./cmd/env-doctor
+```
+
+## License
+
+MIT
