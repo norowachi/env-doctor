@@ -1,11 +1,11 @@
 # 🩺 env-doctor
 
+Everyone has a `.env.example`, nobody enforces it.  
+`env-doctor` is a zero-dependency CLI that makes your `.env` a happy first-class citizen
+
 > Validate your `.env` files against `.env.example`
 > 
 > Catch missing keys, wrong types, and placeholder values before they cause bugs.
-
-Everyone has a `.env.example`, nobody enforces it.  
-`env-doctor` is a zero-dependency CLI that makes your `.env` a happy first-class citizen
 
 ---
 
@@ -28,7 +28,7 @@ Everyone has a `.env.example`, nobody enforces it.
 # Build from source
 git clone https://github.com/norowachi/env-doctor
 cd env-doctor
-go build -o env-doctor ./cmd/env-doctor
+go build ./cmd/env-doctor
 
 # Move to PATH
 mv env-doctor /usr/local/bin/
@@ -39,7 +39,7 @@ mv env-doctor /usr/local/bin/
 ## Usage
 
 ```bash
-# Basic check, compares files in current dir
+# Basic check, compares .env.example and .env in the current dir
 env-doctor
 
 # Custom paths
@@ -71,6 +71,8 @@ DEBUG=false
 # @type: email
 ADMIN_EMAIL=
 ```
+Treated annotations: `@required` and `@type`
+
 
 ### Supported types
 
@@ -78,7 +80,7 @@ ADMIN_EMAIL=
 |------|-----------|
 | `url` | Well-formated URL with scheme and host |
 | `number` / `int` | Integer value |
-| `boolean` / `bool` | `true`, `false`, `1`, `0` |
+| `boolean` / `bool` | `true`, `false` / `1`, `0` / `yes`, `no` |
 | `email` | Valid email address format |
 
 ---
@@ -114,13 +116,13 @@ chmod +x .git/hooks/pre-commit
 🩺 env-doctor  →  .env.example vs .env
 
 ───────────────────────────────────────────────────────
-ERROR    DATABASE_URL                        expected a valid URL, got: "not-a-valid-url"
-WARN     APP_SECRET                          value looks like a placeholder: "changeme"
-ERROR    PORT                                expected a number, got: "abc"
-ERROR    DEBUG                               expected a boolean (true/false/1/0), got: "maybe"
-ERROR    ADMIN_EMAIL                         expected a valid email address, got: "not-an-email"
-WARN     STRIPE_KEY                          value is empty
-INFO     EXTRA_KEY                           key exists in .env but not in .env.example
+✗ ERROR    DATABASE_URL                        expected a valid URL, got: "not-a-valid-url"
+⚠ WARN     APP_SECRET                          value looks like a placeholder: "changeme"
+✗ ERROR    PORT                                expected a number, got: "abc"
+✗ ERROR    DEBUG                               expected a boolean (true/false/1/0), got: "maybe"
+✗ ERROR    ADMIN_EMAIL                         expected a valid email address, got: "not-an-email"
+⚠ WARN     STRIPE_KEY                          value is empty
+⚬ INFO     EXTRA_KEY                           key exists in .env but not in .env.example
 ───────────────────────────────────────────────────────
   4 error(s)  2 warning(s)  1 info
 ```
@@ -131,7 +133,7 @@ INFO     EXTRA_KEY                           key exists in .env but not in .env.
 
 - [ ] `.env-doctor.yml` config file for project-level settings
 - [ ] Custom regex type (`@type: /^[A-Z]{3}$/`)
-- [ ] Homebrew tap & apt package
+- [ ] Homebrew tap & apt/aur package
 - [ ] VS Code extension (inline squiggles in `.env` files)
 - [ ] Multi-env checks support (`.env.staging`, `.env.production`)
 
@@ -140,11 +142,12 @@ INFO     EXTRA_KEY                           key exists in .env but not in .env.
 ## Contributing
 
 PRs are welcome!
-Please open an issue first for large changes.
+> Please open an issue first for large changes.
 
 ```bash
 git clone https://github.com/norowachi/env-doctor
 cd env-doctor
+go test ./...
 go build ./cmd/env-doctor
 ```
 
