@@ -143,6 +143,8 @@ chmod +x .git/hooks/pre-commit
 ✗ ERROR    PORT                                Expected a number, got: "abc"
 ✗ ERROR    DEBUG                               Expected a boolean (true/false/1/0), got: "maybe"
 ✗ ERROR    ADMIN_EMAIL                         Expected a valid email address, got: "not-an-email"
+⚠ WARN     APP_VERSION                         Key is missing from your .env file
+✗ ERROR    CURRENCY                            Key is missing from your .env file
 ⚠ WARN     STRIPE_KEY                          Value is empty
 ⚬ INFO     EXTRA_KEY                           Key exists in .env but not in .env.example
 ───────────────────────────────────────────────────────

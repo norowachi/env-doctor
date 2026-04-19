@@ -10,13 +10,14 @@ import (
 	"github.com/norowachi/env-doctor/internal/validator"
 )
 
-const version = "0.1.0"
+const version = "0.2.1"
 
 func main() {
 	examplePath := flag.String("example", ".env.example", "Path to the example/schema env file")
 	envPath := flag.String("env", ".env", "Path to the target env file to check")
 	jsonOutput := flag.Bool("json", false, "Output results as JSON (for CI pipelines)")
 	showVersion := flag.Bool("version", false, "Print version and exit")
+	ignoreWarnings := flag.Bool("ignore-warnings", false, "Suppress warnings and info messages from output")
 	flag.Parse()
 
 	if *showVersion {
@@ -40,6 +41,9 @@ func main() {
 
 	// Validate
 	issues := validator.Validate(example, actual)
+	if *ignoreWarnings {
+		issues = filterWarnings(issues)
+	}
 
 	// Generate Report
 	if *jsonOutput {
@@ -63,4 +67,14 @@ func hasErrors(issues []validator.Issue) bool {
 		}
 	}
 	return false
+}
+
+func filterWarnings(issues []validator.Issue) []validator.Issue {
+	filtered := issues[:0]
+	for _, i := range issues {
+		if i.Severity == validator.SeverityError {
+			filtered = append(filtered, i)
+		}
+	}
+	return filtered
 }

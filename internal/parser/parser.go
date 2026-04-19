@@ -6,21 +6,22 @@ import (
 	"strings"
 )
 
-// Properties of each env variable entry from the annotations above it
+// Properties of each env variable entry
 type Entry struct {
 	Key      string
 	Value    string
 	Required bool
-	// string, url, number, boolean, email
-	// TODO: support custom types with regex validation
-	Type    string
-	LineNum int
+	// string, url, number, boolean, email or /regex/
+	Type string
+	// current value of the env schema
+	SuspiciousHint string
 }
 
 // Parsed entries from env file by order
 type EnvFile struct {
 	Entries map[string]*Entry
 	Order   []string
+	Name	string
 }
 
 // Read target env and schema files and extracts entries & properties
@@ -33,14 +34,13 @@ func Parse(path string) (*EnvFile, error) {
 
 	ef := &EnvFile{
 		Entries: make(map[string]*Entry),
+		Name: f.Name(),
 	}
 
 	var pendingEntry Entry
-	lineNum := 0
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		lineNum++
 		line := strings.TrimSpace(scanner.Text())
 
 		// Skip blank lines
@@ -79,7 +79,6 @@ func Parse(path string) (*EnvFile, error) {
 				Value:    value,
 				Required: pendingEntry.Required,
 				Type:     pendingEntry.Type,
-				LineNum:  lineNum,
 			}
 
 			ef.Entries[key] = entry

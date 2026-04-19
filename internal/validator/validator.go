@@ -25,7 +25,7 @@ type Issue struct {
 }
 
 // Placeholder values that shouldn't be in production
-var suspiciousValues = []string{
+var globalSuspiciousValues = []string{
 	"changeme", "secret", "xxx", "todo", "fixme",
 	"password", "12345", "test", "example", "replace",
 	"your_", "_here", "insert_",
@@ -50,7 +50,7 @@ func Validate(example *parser.EnvFile, actual *parser.EnvFile) []Issue {
 			issues = append(issues, Issue{
 				Key:      key,
 				Severity: sev,
-				Message:  "Key is missing from your .env file",
+				Message:  "Key is missing from your " + actual.Name + " file",
 			})
 			continue
 		}
@@ -71,7 +71,7 @@ func Validate(example *parser.EnvFile, actual *parser.EnvFile) []Issue {
 
 		// Placeholder value
 		lowerVal := strings.ToLower(actualEntry.Value)
-		for _, bad := range suspiciousValues {
+		for _, bad := range globalSuspiciousValues {
 			if strings.Contains(lowerVal, bad) {
 				issues = append(issues, Issue{
 					Key:      key,
@@ -90,13 +90,13 @@ func Validate(example *parser.EnvFile, actual *parser.EnvFile) []Issue {
 		}
 	}
 
-	// Keys in .env not present in .env.example (info log)
+	// Extra keys
 	for _, key := range actual.Order {
 		if _, exists := example.Entries[key]; !exists {
 			issues = append(issues, Issue{
 				Key:      key,
 				Severity: SeverityInfo,
-				Message:  "key exists in .env but not in .env.example",
+				Message:  "Key exists in " + actual.Name + " but not in " + example.Name,
 			})
 		}
 	}
@@ -150,7 +150,7 @@ func validateType(key, value, typeName string) *Issue {
 
 	default:
 		return &Issue{Key: key, Severity: SeverityError,
-			Message: "Unknown @type \"" + typeName + "\" in schema, valid types: url, number, boolean, email and /regex/"}
+			Message: "Unknown @type \"" + typeName + "\" in schema, valid types: url, number, boolean, email or /regex/"}
 	}
 
 	return nil
