@@ -15,6 +15,7 @@ Everyone has a `.env.example`, nobody enforces it.
 - [x] Detect empty values
 - [x] Flagging placeholder values (`changeme`, `xxx`, `secret`, etc.)
 - [x] Type validation via comment annotations (`url`, `number`, `boolean`, `email`)
+- [x] Custom regex type (`@type: /^[A-Z]{3}$/`)
 - [x] Required field enforcement
 - [x] Non-zero exit code on errors (CI-friendly)
 - [x] JSON output for CI pipelines
@@ -82,6 +83,27 @@ Treated annotations: `@required` and `@type`
 | `number` / `int` | Integer value |
 | `boolean` / `bool` | `true`, `false` / `1`, `0` / `yes`, `no` |
 | `email` | Valid email address format |
+| `/pattern/` | Custom regex pattern |
+
+#### Regex examples
+
+```bash
+# AWS region: us-east-1, eu-west-2, etc.
+# @type: /^[a-z]+-[a-z]+-[0-9]+$/
+AWS_REGION=
+
+# Semver: v1.2.3
+# @type: /^v[0-9]+\.[0-9]+\.[0-9]+$/
+APP_VERSION=
+
+# ISO currency code: USD, EUR, GBP
+# @type: /^[A-Z]{2,3}$/
+CURRENCY=
+
+# UUID v4
+# @type: /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+TENANT_ID=
+```
 
 ---
 
@@ -116,13 +138,13 @@ chmod +x .git/hooks/pre-commit
 🩺 env-doctor  →  .env.example vs .env
 
 ───────────────────────────────────────────────────────
-✗ ERROR    DATABASE_URL                        expected a valid URL, got: "not-a-valid-url"
-⚠ WARN     APP_SECRET                          value looks like a placeholder: "changeme"
-✗ ERROR    PORT                                expected a number, got: "abc"
-✗ ERROR    DEBUG                               expected a boolean (true/false/1/0), got: "maybe"
-✗ ERROR    ADMIN_EMAIL                         expected a valid email address, got: "not-an-email"
-⚠ WARN     STRIPE_KEY                          value is empty
-⚬ INFO     EXTRA_KEY                           key exists in .env but not in .env.example
+✗ ERROR    DATABASE_URL                        Expected a valid URL, got: "not-a-valid-url"
+⚠ WARN     APP_SECRET                          Value looks like a placeholder: "changeme"
+✗ ERROR    PORT                                Expected a number, got: "abc"
+✗ ERROR    DEBUG                               Expected a boolean (true/false/1/0), got: "maybe"
+✗ ERROR    ADMIN_EMAIL                         Expected a valid email address, got: "not-an-email"
+⚠ WARN     STRIPE_KEY                          Value is empty
+⚬ INFO     EXTRA_KEY                           Key exists in .env but not in .env.example
 ───────────────────────────────────────────────────────
   4 error(s)  2 warning(s)  1 info
 ```
@@ -132,7 +154,6 @@ chmod +x .git/hooks/pre-commit
 ## Roadmap
 
 - [ ] `.env-doctor.yml` config file for project-level settings
-- [ ] Custom regex type (`@type: /^[A-Z]{3}$/`)
 - [ ] Homebrew tap & apt/aur package
 - [ ] VS Code extension (inline squiggles in `.env` files)
 - [ ] Multi-env checks support (`.env.staging`, `.env.production`)

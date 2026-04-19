@@ -105,6 +105,21 @@ func Validate(example *parser.EnvFile, actual *parser.EnvFile) []Issue {
 }
 
 func validateType(key, value, typeName string) *Issue {
+	// Regex type, @type: /pattern/
+	if strings.HasPrefix(typeName, "/") && strings.HasSuffix(typeName, "/") {
+		pattern := typeName[1 : len(typeName)-1]
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			return &Issue{Key: key, Severity: SeverityError,
+				Message: "Invalid regex pattern in schema: " + pattern + " (" + err.Error() + ")"}
+		}
+		if !re.MatchString(value) {
+			return &Issue{Key: key, Severity: SeverityError,
+				Message: "Value \"" + value + "\" does not match pattern /" + pattern + "/"}
+		}
+		return nil
+	}
+
 	switch strings.ToLower(typeName) {
 	case "url":
 		u, err := url.ParseRequestURI(value)
@@ -132,6 +147,10 @@ func validateType(key, value, typeName string) *Issue {
 			return &Issue{Key: key, Severity: SeverityError,
 				Message: "Expected a valid email address, got: \"" + value + "\""}
 		}
+
+	default:
+		return &Issue{Key: key, Severity: SeverityError,
+			Message: "Unknown @type \"" + typeName + "\" in schema, valid types: url, number, boolean, email and /regex/"}
 	}
 
 	return nil

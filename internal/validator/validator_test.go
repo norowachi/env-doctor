@@ -118,3 +118,104 @@ func TestAllGood(t *testing.T) {
 		}
 	}
 }
+
+func TestUnknownType(t *testing.T) {
+	exPath := writeTemp(t, "# @type: phonenumber\nCONTACT=\n")
+	envPath := writeTemp(t, "CONTACT=123-456-7890\n")
+	defer os.Remove(exPath)
+	defer os.Remove(envPath)
+ 
+	example, _ := parser.Parse(exPath)
+	actual, _ := parser.Parse(envPath)
+	issues := validator.Validate(example, actual)
+ 
+	found := false
+	for _, i := range issues {
+		if i.Key == "CONTACT" && i.Severity == validator.SeverityError {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected ERROR for unknown @type, got: %+v", issues)
+	}
+}
+
+func TestRegexMatch(t *testing.T) {
+	// AWS region format: us-east-1, eu-west-2, etc.
+	exPath := writeTemp(t, "# @type: /^[a-z]+-[a-z]+-[0-9]+$/\nAWS_REGION=\n")
+	envPath := writeTemp(t, "AWS_REGION=us-east-1\n")
+	defer os.Remove(exPath)
+	defer os.Remove(envPath)
+
+	example, _ := parser.Parse(exPath)
+	actual, _ := parser.Parse(envPath)
+	issues := validator.Validate(example, actual)
+
+	for _, i := range issues {
+		if i.Key == "AWS_REGION" && i.Severity == validator.SeverityError {
+			t.Errorf("unexpected ERROR for valid regex match: %+v", i)
+		}
+	}
+}
+
+func TestRegexNoMatch(t *testing.T) {
+	// Semver format, invalid value
+	exPath := writeTemp(t, "# @type: /^v[0-9]+\\.[0-9]+\\.[0-9]+$/\nAPP_VERSION=\n")
+	envPath := writeTemp(t, "APP_VERSION=not-a-version\n")
+	defer os.Remove(exPath)
+	defer os.Remove(envPath)
+
+	example, _ := parser.Parse(exPath)
+	actual, _ := parser.Parse(envPath)
+	issues := validator.Validate(example, actual)
+
+	found := false
+	for _, i := range issues {
+		if i.Key == "APP_VERSION" && i.Severity == validator.SeverityError {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected ERROR for regex mismatch, got: %+v", issues)
+	}
+}
+
+func TestRegexValidSemver(t *testing.T) {
+	// Semver format, valid value
+	exPath := writeTemp(t, "# @type: /^v[0-9]+\\.[0-9]+\\.[0-9]+$/\nAPP_VERSION=\n")
+	envPath := writeTemp(t, "APP_VERSION=v1.2.3\n")
+	defer os.Remove(exPath)
+	defer os.Remove(envPath)
+
+	example, _ := parser.Parse(exPath)
+	actual, _ := parser.Parse(envPath)
+	issues := validator.Validate(example, actual)
+
+	for _, i := range issues {
+		if i.Key == "APP_VERSION" && i.Severity == validator.SeverityError {
+			t.Errorf("unexpected ERROR for valid semver: %+v", i)
+		}
+	}
+}
+
+func TestRegexInvalidPattern(t *testing.T) {
+	// Malformed regex pattern
+	exPath := writeTemp(t, "# @type: /^[unclosed/\nFOO=\n")
+	envPath := writeTemp(t, "FOO=bar\n")
+	defer os.Remove(exPath)
+	defer os.Remove(envPath)
+
+	example, _ := parser.Parse(exPath)
+	actual, _ := parser.Parse(envPath)
+	issues := validator.Validate(example, actual)
+
+	found := false
+	for _, i := range issues {
+		if i.Key == "FOO" && i.Severity == validator.SeverityError {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected ERROR for invalid regex pattern, got: %+v", issues)
+	}
+}
