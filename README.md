@@ -130,6 +130,10 @@ env-doctor || exit 1
 chmod +x .git/hooks/pre-commit
 ```
 
+> Note: for direct JSON output you can create an env variable called `ENV_DOCTOR_JSON`, no value necessary.
+>
+> ex: ```ENV_DOCTOR_JSON='' env-doctor```
+
 ---
 
 ## Example output
@@ -148,7 +152,7 @@ chmod +x .git/hooks/pre-commit
 ⚠ WARN     STRIPE_KEY                          Value is empty
 ⚬ INFO     EXTRA_KEY                           Key exists in .env but not in .env.example
 ───────────────────────────────────────────────────────
-  4 error(s)  2 warning(s)  1 info
+  5 error(s)  3 warning(s)  1 info
 ```
 
 ---

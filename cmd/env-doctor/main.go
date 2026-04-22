@@ -13,9 +13,11 @@ import (
 const version = "0.2.1"
 
 func main() {
+	_, JSON := os.LookupEnv("ENV_DOCTOR_JSON")
+
 	examplePath := flag.String("example", ".env.example", "Path to the example/schema env file")
 	envPath := flag.String("env", ".env", "Path to the target env file to check")
-	jsonOutput := flag.Bool("json", false, "Output results as JSON (for CI pipelines)")
+	jsonOutput := flag.Bool("json", JSON, "Output results as JSON (for CI pipelines)")
 	showVersion := flag.Bool("version", false, "Print version and exit")
 	ignoreWarnings := flag.Bool("ignore-warnings", false, "Suppress warnings and info messages from output")
 	flag.Parse()
